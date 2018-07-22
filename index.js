@@ -1,3 +1,5 @@
+///////////// Initial Setup /////////////
+
 const dotenv = require('dotenv').config();
 const express = require('express');
 const crypto = require('crypto');
@@ -17,6 +19,8 @@ const PORT = 3000
 app.get('/', (req, res) => {
   res.send('Hello World')
 });
+
+///////////// Helper Functions /////////////
 
 const buildRedirectUri = () => `${appUrl}/shopify/callback`;
 
@@ -40,25 +44,21 @@ const fetchShopData = async (shop, accessToken) => await axios(buildShopDataRequ
   }
 });
 
+///////////// Route Handlers /////////////
+
 app.get('/shopify', (req, res) => {
   const shop = req.query.shop;
 
   if (!shop) { return res.status(400).send('no shop')}
 
   const state = nonce();
-  const redirectUri = appUrl + '/shopify/callback';
-  const installUrl = 'https://' + shop + '/admin/oauth/authroize?client_id=' + shopifyApiPublicKey
-  +'&scope=' + scopes + '&state=' + state + '&redirect_uri=' + redirectUri;
-  
-  res.cookie('state',state);
-  res.redirect(installUrl);
 
   const installShopUrl = buildInstallUrl(shop, state, buildRedirectUri())
 
   res.cookie('state', state) // should be encrypted in production
   res.redirect(installShopUrl);
 });
-/*
+
 app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state } = req.query;
   const stateCookie = cookie.parse(req.headers.cookie).state;
@@ -88,8 +88,9 @@ app.get('/shopify/callback', async (req, res) => {
     console.log(err)
     res.status(500).send('something went wrong')
   }
-
 });
-*/
+
+
+///////////// Start the Server /////////////
 
 app.listen(PORT, () => console.log(`listening on port ${PORT}`));
