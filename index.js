@@ -7,6 +7,7 @@ const cookie = require('cookie');
 const nonce = require('nonce')();
 const querystring = require('querystring');
 const axios = require('axios');
+const request = require('request-promise');
 
 const shopifyApiPublicKey = process.env.SHOPIFY_API_PUBLIC_KEY;
 const shopifyApiSecretKey = process.env.SHOPIFY_API_SECRET_KEY;
@@ -18,24 +19,6 @@ const PORT = 3000
 
 app.get('/', (req, res) => {
   res.send('Hello World')
-    
-    //
-    var rl = require('readline');
-
-module.exports = function ask(question, callback) {
-  var r = rl.createInterface({
-    input: process.stdin,
-    output: process.stdout});
-  r.question(question + '\n', function(answer) {
-    r.close();
-    callback(null, answer);
-  });
-}
-
-ask('Did you find this usefull?', function(answer) {
-  console.log(answer)
-});
-    //
 });
 
 ///////////// Helper Functions /////////////
@@ -76,7 +59,7 @@ app.get('/shopify', (req, res) => {
   res.cookie('state', state) // should be encrypted in production
   res.redirect(installShopUrl);
 });
-
+/*
 app.get('/shopify/callback', async (req, res) => {
   const { shop, code, state } = req.query;
   const stateCookie = cookie.parse(req.headers.cookie).state;
@@ -107,23 +90,86 @@ app.get('/shopify/callback', async (req, res) => {
     res.status(500).send('something went wrong')
   }
     
-    
-    
-  prompt.start();
- 
-  //
-  // Get two properties from the user: username and email
-  //
-  prompt.get(['username', 'email'], function (err, result) {
-    //
-    // Log the results.
-    //
-    console.log('Command-line input received:');
-    console.log('  username: ' + result.username);
-    console.log('  email: ' + result.email);
-  });
-    
 });
+*/
+
+app.get('/shopify/callback', (req,res) => {
+    const {shop,hmac,code,state} = req.query;
+    const stateCookie = cookie.parse(req.headers.cookie).state;
+    
+    if(state !== stateCookie){
+        return res.status(403).send('Request origin cannot be verified');
+    }
+    if(shop && hmac && code){
+        const map = Object.assign({},req.query);
+        delete map['hmac'];
+        const message = querystring.stringify(map);
+        const generatedHash = crypto.createHmac('sha256',shopifyApiSecretKey)
+        .update(message).digest('hex');
+        
+        if(generatedHash !== hmac){
+            return res.status(400).send('HMAC validation failed');
+        }
+        const accessTokenRequestUrl = 'https://' + shop + '/admin/oauth/access_token';
+        const accessTokenPayLoad = {
+            client_id:shopifyApiPublicKey,
+            client_secret:shopifyApiSecretKey,
+            code
+        };
+        
+        request.post(accessTokenRequestUrl,{json: accessTokenPayLoad})
+        .then((accessTokenResponse) => {
+            const accessToken = accessTokenResponse.access_token;
+            
+            const apiRequestUrl = 'https://' + shop + '/admin/products.json';// GET URL
+            const apiRequestHeader = {
+                'X-Shopify-Access-Token': accessToken
+            };
+            request.get(apiRequestUrl,{headers: apiRequestHeader})
+            .then((apiResponse) =>{
+                res.end(apiResponse);
+            })
+            .catch((error) => {
+                res.status(error.statusCode).send(error.error.error_description);
+            });
+        })
+        .catch((error) =>{
+            res.status(error.statusCode).send(error.error.error_description);
+        });
+    }else{
+        res.status(400).send('Required Parameters missing');
+    }
+});
+
+//functions to send mail
+var nodemailer = require('nodemailer');
+
+var transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+//email user
+function getReceiver(receiver,eta_product){
+
+var mailOptions = {
+  from: 'youremail@gmail.com',
+  to: receiver,
+  subject: 'Vessel Pre Order',
+  text: eta_product
+};
+
+transporter.sendMail(mailOptions, function(error, info){
+  if (error) {
+    console.log(error);
+  } else {
+    console.log('Email sent: ' + info.response);
+  }
+});
+}
 
 
 ///////////// Start the Server /////////////
