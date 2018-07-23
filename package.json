@@ -12,7 +12,9 @@
     "dotenv": "^5.0.1",
     "express": "^4.16.3",
     "node-fetch": "^2.1.2",
+    "nodemailer": "^4.6.7",
     "nonce": "^1.0.4",
+    "prompt": "^1.0.0",
     "request": "^2.87.0",
     "request-promise": "^4.2.2"
   },

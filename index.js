@@ -1,5 +1,5 @@
 ///////////// Initial Setup /////////////
-
+var prompt = require('prompt');
 const dotenv = require('dotenv').config();
 const express = require('express');
 const crypto = require('crypto');
@@ -18,6 +18,24 @@ const PORT = 3000
 
 app.get('/', (req, res) => {
   res.send('Hello World')
+    
+    //
+    var rl = require('readline');
+
+module.exports = function ask(question, callback) {
+  var r = rl.createInterface({
+    input: process.stdin,
+    output: process.stdout});
+  r.question(question + '\n', function(answer) {
+    r.close();
+    callback(null, answer);
+  });
+}
+
+ask('Did you find this usefull?', function(answer) {
+  console.log(answer)
+});
+    //
 });
 
 ///////////// Helper Functions /////////////
@@ -88,6 +106,23 @@ app.get('/shopify/callback', async (req, res) => {
     console.log(err)
     res.status(500).send('something went wrong')
   }
+    
+    
+    
+  prompt.start();
+ 
+  //
+  // Get two properties from the user: username and email
+  //
+  prompt.get(['username', 'email'], function (err, result) {
+    //
+    // Log the results.
+    //
+    console.log('Command-line input received:');
+    console.log('  username: ' + result.username);
+    console.log('  email: ' + result.email);
+  });
+    
 });
 
 
