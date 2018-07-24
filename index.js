@@ -8,17 +8,34 @@ const nonce = require('nonce')();
 const querystring = require('querystring');
 const axios = require('axios');
 const request = require('request-promise');
+var cors = require('cors');
+var nodemailer = require('nodemailer');
+
+
 
 const shopifyApiPublicKey = process.env.SHOPIFY_API_PUBLIC_KEY;
 const shopifyApiSecretKey = process.env.SHOPIFY_API_SECRET_KEY;
 const scopes = 'write_products';
-const appUrl = 'https://7dc6b290.ngrok.io';
+const appUrl = 'https://0fa8cb8f.ngrok.io';
 
 const app = express();
 const PORT = 3000
 
+
+//enable CORS 
+app.use(cors())
+
 app.get('/', (req, res) => {
   res.send('Hello World')
+});
+
+
+
+//cors test function
+
+app.post('/email', cors(), function(req, res){
+    getReceiver(req.body['email-input'],req.body['ETA-input']);
+    res.send('Mail Has Been Sent!')
 });
 
 ///////////// Helper Functions /////////////
@@ -121,7 +138,7 @@ app.get('/shopify/callback', (req,res) => {
         .then((accessTokenResponse) => {
             const accessToken = accessTokenResponse.access_token;
             
-            const apiRequestUrl = 'https://' + shop + '/admin/products.json';// GET URL
+            const apiRequestUrl = 'https://' + shop + '/admin/shop.json';// GET URL
             const apiRequestHeader = {
                 'X-Shopify-Access-Token': accessToken
             };
@@ -141,9 +158,12 @@ app.get('/shopify/callback', (req,res) => {
     }
 });
 
-//functions to send mail
-var nodemailer = require('nodemailer');
 
+
+//functions to send mail
+
+function getReceiver(receiver,eta_product){
+    
 var transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -152,8 +172,6 @@ var transporter = nodemailer.createTransport({
   }
 });
 
-//email user
-function getReceiver(receiver,eta_product){
 
 var mailOptions = {
   from: 'youremail@gmail.com',
