@@ -23,7 +23,7 @@ var mandrillTransport = require('nodemailer-mandrill-transport');
 const shopifyApiPublicKey = process.env.SHOPIFY_API_PUBLIC_KEY;
 const shopifyApiSecretKey = process.env.SHOPIFY_API_SECRET_KEY;
 const scopes = 'write_products';
-const appUrl = 'https://2939ca14.ngrok.io';
+const appUrl = 'https://secure-forest-90187.herokuapp.com/';
 
 const app = express();
 const PORT = 3000
@@ -43,10 +43,10 @@ app.get('/', (req, res) => {
 
 
 
-//cors test function
 
 app.post('/email', cors(), function(req, res){
-    vesselMandrill(req.body.name,req.body.message);
+    //getReceiver(req.body.email,req.body.message);
+    vesselMandrill(req.body.email,req.body.message);
     res.send('Mail Has Been Sent!')
 });
 
