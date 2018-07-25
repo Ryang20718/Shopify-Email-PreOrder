@@ -16,14 +16,10 @@ var nodemailer = require('nodemailer');
  
 var mandrillTransport = require('nodemailer-mandrill-transport');
 
-
-
-
-
 const shopifyApiPublicKey = process.env.SHOPIFY_API_PUBLIC_KEY;
 const shopifyApiSecretKey = process.env.SHOPIFY_API_SECRET_KEY;
 const scopes = 'write_products';
-const appUrl = 'https://secure-forest-90187.herokuapp.com/';
+const appUrl = 'https://2939ca14.ngrok.io';
 
 const app = express();
 const PORT = 3000
