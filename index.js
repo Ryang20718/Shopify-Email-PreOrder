@@ -10,16 +10,28 @@ const axios = require('axios');
 const request = require('request-promise');
 var cors = require('cors');
 var nodemailer = require('nodemailer');
+var bodyParser = require('body-parser')
+//mandrill
+var nodemailer = require('nodemailer');
+ 
+var mandrillTransport = require('nodemailer-mandrill-transport');
+
+
 
 
 
 const shopifyApiPublicKey = process.env.SHOPIFY_API_PUBLIC_KEY;
 const shopifyApiSecretKey = process.env.SHOPIFY_API_SECRET_KEY;
 const scopes = 'write_products';
-const appUrl = 'https://0fa8cb8f.ngrok.io';
+const appUrl = 'https://2939ca14.ngrok.io';
 
 const app = express();
 const PORT = 3000
+
+//body parser
+app.use(bodyParser.urlencoded({ extended: false })) 
+
+app.use(bodyParser.json());
 
 
 //enable CORS 
@@ -34,7 +46,7 @@ app.get('/', (req, res) => {
 //cors test function
 
 app.post('/email', cors(), function(req, res){
-    getReceiver(req.body['email-input'],req.body['ETA-input']);
+    vesselMandrill(req.body.name,req.body.message);
     res.send('Mail Has Been Sent!')
 });
 
@@ -185,6 +197,30 @@ transporter.sendMail(mailOptions, function(error, info){
     console.log(error);
   } else {
     console.log('Email sent: ' + info.response);
+  }
+});
+}
+
+//
+function vesselMandrill(receiver,message){
+
+ 
+var transport = nodemailer.createTransport(mandrillTransport({
+  auth: {
+    apiKey: process.env.MANDRILL_API
+  }
+}));
+ 
+transport.sendMail({
+  from: 'info@vesselbags.com',
+  to: receiver,
+  subject: 'Vessel Pre Order',
+  html: message
+}, function(err, info) {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log(info);
   }
 });
 }
